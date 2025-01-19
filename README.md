@@ -350,7 +350,7 @@
 
 ## 8. Struct / Class / Actor
 - 8장에서는 다음 강의전 Struct, Class, Actor의 차이점에 대해서 다루고 있다.
-- 기본적인 내용을 다루고 있지만 애플이 SwiftUI를 만들게 된 계기에 대해서도 어느정도 이해할 수 있어서 꽤나 도움이 되는 강의라고 생각한다.
+- 기본적인 내용을 다루고 있지만 Struct, Class, Actor의 차이점과 차이가 발생하게 되는 이유에 대해 꽤나 자세히 설명해주기 때문에 좋은 강의라고 생각한다.
 
     <details>
     <summary>내용 정리</summary>
@@ -416,7 +416,6 @@
     - 그래서 Stack과 Thread와의 Data 전달이 빠른 편이다.
     - Heap은 여러 Thread와 Sync를 맞추고 있기 때문에 Stack에 비해 Data 전달이 느린편이다.
     - Struct는 기본적으로 값 복사이고 Stack에 생성된다. 그래서 Multi Thread 환경에서 기본적으로 Data 전달이 빠르다.
-    - 이러한 특성 때문에 기존의 class ViewController 보다 재렌더링할 때 유리하기 때문에 SwiftUI를 도입한게 아닌가 추축한다. (해당 부분에 대해서는 조금 더 깊게 공부해볼 것)
     - Class는 기본적으로 참조 복사이고 Heap에 생성된다. 그래서 Multi Thread 환경에서 기본적으로 Data 전달이 Struct에 비해 느리다.
     - 또한 여러 Thread에서 Sync를 맞추고 있기 때문에 여러 Thread에서 동시에 Heap에 접근해서 Data를 바꾸려고 하게 되면 락이 걸릴수도 있다. -> Thread safe하지 않다.
     - 이 때 Thread safe하도록 만든것이 바로 Actor이다.

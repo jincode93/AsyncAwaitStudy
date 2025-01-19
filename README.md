@@ -9,7 +9,7 @@
 - 2강에서는 URLSession의 기본적은 메서드를 활용해 @escaping, Combine, async throws 각 방법별로 비동기처리를 하고 에러핸들링을 하는 내용을 담고 있다.
 - 비동기 처리를 한 후 UI 관련 업데이트 시에는 꼭 MainThread에서 실행해야되기 때문에 await MainActor.run 혹인 @MainActor 키워드를 사용해 UI 업데이트를 진행해야함
 <details>
-<summary>내용 정리</summary>
+<summary>코드 정리</summary>
 <div markdown="1">
 
 ```swift
@@ -77,3 +77,7 @@ struct DownloadImageAsync: View {
 
 </div>
 </details>
+
+## 3. AsyncAwait
+- 3강에서는 print를 통해 Async Await, Multi Thread 환경에서 코드의 동작이 어떠한 방식으로 이루어지는지에 대해 다루고 있다.
+- 실질적으로 사용하는 코드 보다는 원리에 대한 이해가 필요한 강의이기 때문에 코드정리는 따로 진행하지 않음

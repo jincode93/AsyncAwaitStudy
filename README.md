@@ -247,3 +247,103 @@
 
     </div>
     </details>
+
+## 7. Continuations
+- 7강에서는 withCheckedContinuation, withCheckedThrowingContinuation을 활용해 기존에 @escaping, Combine을 활용하던 메서드를 async 메서드로 변환하는 방법에 대해 다루고 있다.
+- 해당 강의를 통해 애플에서 기본적으로 제공하고 있는 async 메서드 뿐만 아니라 서드파티 라이브러리의 비동기 메서드들을 async 메서드로 변환해서 사용할 수 있기 때문에 코드의 통일성을 올릴 수 있다.
+    <details>
+    <summary>코드 정리</summary>
+    <div markdown="1">
+
+    ```swift
+    // 구현
+    class CheckedContinuationBootcampNetworkManager {
+        // URLSession의 메서드 중 async 메서드 활용 방법
+        func getData(url: URL) async throws -> Data {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                return data
+            } catch {
+                throw error
+            }
+        }
+
+        // URLSession의 메서드 중 completionHandler를 활용한 메서드를 내부적으로 async throws 메서드로 변환하는 예시
+        // 영상에서 예시로 사용했을 뿐, 위와 같이 기본적으로 제공하는 async 메서드를 사용하는 것이 정석
+        func getData2(url: URL) async throws -> Data {
+            return try await withCheckedThrowingContinuation { continuation in
+                URLSession.shared.dataTask(with: url) { data, response, error in
+                    if let data = data {
+                        continuation.resume(returning: data)
+                    } else if let error = error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume(throwing: URLError(.badURL))
+                    }
+                }
+                .resume()
+            }
+        }
+
+        // 서드파티 라이브러리 메서드 중 completionHanlder를 제공하는 메서드와 동일한 형태의 메서드 예제
+        func getHeartImageFromDatabase(completionHandler: @escaping (_ image: UIImage) -> ()) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                completionHandler(UIImage(systemName: "heart.fill")!)
+            }
+        }
+
+        // 위의 메서드를 async 메서드로 변환하는 방법
+        func getHeartImageFromDatabase() async -> UIImage {
+            await withCheckedContinuation { continuation in
+                self.getHeartImageFromDatabase { image in
+                    continuation.resume(returning: image)
+                }
+            }
+        }
+    }
+
+    // 사용
+    class CheckedContinuationBootcampViewModel: ObservableObject {
+        @Published var image: UIImage? = nil
+        let networkManager = CheckedContinuationBootcampNetworkManager()
+        
+        func getImage() async {
+            guard let url = URL(string: "https://picsum.photos/300") else { return }
+            do {
+                let data = try await networkManager.getData2(url: url)
+                if let image = UIImage(data: data) {
+                    await MainActor.run {
+                        self.image = image
+                    }
+                }
+            } catch {
+                print(error)
+            }
+        }
+        
+        func getHeartImage() async {
+            self.image = await networkManager.getHeartImageFromDatabase()
+        }
+    }
+
+    struct CheckedContinuationBootcamp: View {
+        @StateObject private var viewModel = CheckedContinuationBootcampViewModel()
+        
+        var body: some View {
+            ZStack {
+                if let image = viewModel.image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 200, height: 200)
+                }
+            }
+            .task {
+                await viewModel.getHeartImage()
+            }
+        }
+    }
+    ```
+    
+    </div>
+    </details>

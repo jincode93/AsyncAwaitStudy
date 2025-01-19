@@ -85,4 +85,70 @@ struct DownloadImageAsync: View {
 ## 4. Task
 - 4강에서는 Task에 대한 설명을 다루고 있다.
 - 기본적으로 Task 내부에서 실행하는 코드는 순차적으로 이루어지기 때문에 await 키워드를 사용하게 된다면 다음 줄의 코드는 await의 메서드가 실행이 완료된 후 실행이 된다.
-- 만약 기본적은 Task만 사용해서 병렬로 여러 코드를 실행하고 싶다면 각각의 Task를 따로 만들어서 사용해야된다. -> 해당 부분에 대한 내용은 다음 강의에서 이어서 다룬다. 실질적으로는 Task를 나눠서 실행하는 비효율적인 방법을 사용하진 않는다.
+- 만약 기본적인 Task만 사용해서 병렬로 여러 코드를 실행하고 싶다면 각각의 Task를 따로 만들어서 사용해야된다. -> 해당 부분에 대한 내용은 다음 강의에서 이어서 다룬다. 실질적으로는 Task를 나눠서 실행하는 비효율적인 방법을 사용하진 않는다.
+
+## 5. AsyncLet
+- 5강에서는 AsyncLet 키워드에 대해서 다루고 있다.
+- async let 키워드를 사용한다면 위에서 병렬로 실행하기 위해 여러 Task를 만들어서 사용하는 비효율적인 부분을 없앨 수 있지만, 반복되는 여러가지의 작업을 병렬로 실행할 때에는 다음 강의에서 배울 TaskGroup이 더 적합하다.
+<details>
+<summary>코드 정리</summary>
+<div markdown="1">
+    
+```swift
+struct AsyncLetBootcamp: View {
+    @State private var images: [UIImage] = []
+    @State private var title = "Async Let 🥳"
+    let columns = [GridItem(.flexible()), GridItem(.flexible())]
+    let url = URL(string: "https://picsum.photos/300")!
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                LazyVGrid(columns: columns) {
+                    ForEach(images, id: \.self) { image in
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 150)
+                    }
+                }
+            }
+            .navigationTitle(title)
+            .onAppear {
+                Task {
+                    do {
+                        // async let 키워드를 통해 여러 메서드를 병렬로 실행하고 await 키워드로 종료되기를 기다렸다가 다음 작업을 진행할 수 있다.
+                        async let fetchImage1 = fetchImage()
+                        async let fetchTitle = fetchTitle()
+                        let (image, title) = await (try fetchImage1, fetchTitle)
+                        self.images.append(image)
+                        self.title = title
+                    } catch {
+                        
+                    }
+                }
+            }
+        }
+    }
+    
+    func fetchTitle() async -> String {
+        return "NEW TITLE 🤩"
+    }
+    
+    func fetchImage() async throws -> UIImage {
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let image = UIImage(data: data) {
+                return image
+            } else {
+                throw URLError(.badURL)
+            }
+        } catch {
+            throw error
+        }
+    }
+}
+```
+
+</div>
+</details>

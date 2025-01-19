@@ -8,75 +8,75 @@
 ## 2. DownloadImageAsync
 - 2강에서는 URLSession의 기본적은 메서드를 활용해 @escaping, Combine, async throws 각 방법별로 비동기처리를 하고 에러핸들링을 하는 내용을 담고 있다.
 - 비동기 처리를 한 후 UI 관련 업데이트 시에는 꼭 MainThread에서 실행해야되기 때문에 await MainActor.run 혹인 @MainActor 키워드를 사용해 UI 업데이트를 진행해야함
-<details>
-<summary>코드 정리</summary>
-<div markdown="1">
-
-```swift
-// 기본적인 Async 활용 방법
-
-// 구현
-class DownloadImageAsyncImageLoader {
-    let url = URL(string: "https://picsum.photos/200")!
+    <details>
+    <summary>코드 정리</summary>
+    <div markdown="1">
     
-    func handleResponse(data: Data?, response: URLResponse?) -> UIImage? {
-        guard
-            let data = data,
-            let image = UIImage(data: data),
-            let response = response as? HTTPURLResponse,
-            response.statusCode >= 200 && response.statusCode < 300
-        else {
-            return nil
-        }
-        return image
-    }
-
-    func downloadWithAsync() async throws -> UIImage? {
-        do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            return handleResponse(data: data, response: response)
-        } catch {
-            throw error
-        }
-    }
-}
-
-// 사용
-class DownloadImageAsyncViewModel: ObservableObject {
-    @Published var image: UIImage? = nil
-    let loader = DownloadImageAsyncImageLoader()
-
-    func fetchImage() async {
-        let image = try? await loader.downloadWithAsync()
-        await MainActor.run {
-            self.image = image
-        }
-    }
-}
-
-struct DownloadImageAsync: View {
-    @StateObject private var viewModel = DownloadImageAsyncViewModel()
+    ```swift
+    // 기본적인 Async 활용 방법
     
-    var body: some View {
-        ZStack {
-            if let image = viewModel.image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 250, height: 250)
+    // 구현
+    class DownloadImageAsyncImageLoader {
+        let url = URL(string: "https://picsum.photos/200")!
+        
+        func handleResponse(data: Data?, response: URLResponse?) -> UIImage? {
+            guard
+                let data = data,
+                let image = UIImage(data: data),
+                let response = response as? HTTPURLResponse,
+                response.statusCode >= 200 && response.statusCode < 300
+            else {
+                return nil
             }
+            return image
         }
-        .onAppear {
-            Task {
-                await viewModel.fetchImage()
+    
+        func downloadWithAsync() async throws -> UIImage? {
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                return handleResponse(data: data, response: response)
+            } catch {
+                throw error
             }
         }
     }
-}
-```
-
-</div>
-</details>
+    
+    // 사용
+    class DownloadImageAsyncViewModel: ObservableObject {
+        @Published var image: UIImage? = nil
+        let loader = DownloadImageAsyncImageLoader()
+    
+        func fetchImage() async {
+            let image = try? await loader.downloadWithAsync()
+            await MainActor.run {
+                self.image = image
+            }
+        }
+    }
+    
+    struct DownloadImageAsync: View {
+        @StateObject private var viewModel = DownloadImageAsyncViewModel()
+        
+        var body: some View {
+            ZStack {
+                if let image = viewModel.image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 250, height: 250)
+                }
+            }
+            .onAppear {
+                Task {
+                    await viewModel.fetchImage()
+                }
+            }
+        }
+    }
+    ```
+    
+    </div>
+    </details>
 
 ## 3. AsyncAwait
 - 3강에서는 print를 통해 Async Await, Multi Thread 환경에서 코드의 동작이 어떠한 방식으로 이루어지는지에 대해 다루고 있다.
@@ -90,65 +90,65 @@ struct DownloadImageAsync: View {
 ## 5. AsyncLet
 - 5강에서는 AsyncLet 키워드에 대해서 다루고 있다.
 - async let 키워드를 사용한다면 위에서 병렬로 실행하기 위해 여러 Task를 만들어서 사용하는 비효율적인 부분을 없앨 수 있지만, 반복되는 여러가지의 작업을 병렬로 실행할 때에는 다음 강의에서 배울 TaskGroup이 더 적합하다.
-<details>
-<summary>코드 정리</summary>
-<div markdown="1">
-    
-```swift
-struct AsyncLetBootcamp: View {
-    @State private var images: [UIImage] = []
-    @State private var title = "Async Let 🥳"
-    let columns = [GridItem(.flexible()), GridItem(.flexible())]
-    let url = URL(string: "https://picsum.photos/300")!
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                LazyVGrid(columns: columns) {
-                    ForEach(images, id: \.self) { image in
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 150)
+    <details>
+    <summary>코드 정리</summary>
+    <div markdown="1">
+        
+    ```swift
+    struct AsyncLetBootcamp: View {
+        @State private var images: [UIImage] = []
+        @State private var title = "Async Let 🥳"
+        let columns = [GridItem(.flexible()), GridItem(.flexible())]
+        let url = URL(string: "https://picsum.photos/300")!
+        
+        var body: some View {
+            NavigationView {
+                ScrollView {
+                    LazyVGrid(columns: columns) {
+                        ForEach(images, id: \.self) { image in
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 150)
+                        }
                     }
                 }
-            }
-            .navigationTitle(title)
-            .onAppear {
-                Task {
-                    do {
-                        // async let 키워드를 통해 여러 메서드를 병렬로 실행하고 await 키워드로 종료되기를 기다렸다가 다음 작업을 진행할 수 있다.
-                        async let fetchImage1 = fetchImage()
-                        async let fetchTitle = fetchTitle()
-                        let (image, title) = await (try fetchImage1, fetchTitle)
-                        self.images.append(image)
-                        self.title = title
-                    } catch {
-                        
+                .navigationTitle(title)
+                .onAppear {
+                    Task {
+                        do {
+                            // async let 키워드를 통해 여러 메서드를 병렬로 실행하고 await 키워드로 종료되기를 기다렸다가 다음 작업을 진행할 수 있다.
+                            async let fetchImage1 = fetchImage()
+                            async let fetchTitle = fetchTitle()
+                            let (image, title) = await (try fetchImage1, fetchTitle)
+                            self.images.append(image)
+                            self.title = title
+                        } catch {
+                            
+                        }
                     }
                 }
             }
         }
-    }
-    
-    func fetchTitle() async -> String {
-        return "NEW TITLE 🤩"
-    }
-    
-    func fetchImage() async throws -> UIImage {
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            if let image = UIImage(data: data) {
-                return image
-            } else {
-                throw URLError(.badURL)
+        
+        func fetchTitle() async -> String {
+            return "NEW TITLE 🤩"
+        }
+        
+        func fetchImage() async throws -> UIImage {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                if let image = UIImage(data: data) {
+                    return image
+                } else {
+                    throw URLError(.badURL)
+                }
+            } catch {
+                throw error
             }
-        } catch {
-            throw error
         }
     }
-}
-```
-
-</div>
-</details>
+    ```
+    
+    </div>
+    </details>

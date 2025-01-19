@@ -53,6 +53,9 @@ struct SendableBootcamp: View {
     @StateObject private var viewModel = SendableBootcampViewModel()
     var body: some View {
         Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+            .task {
+                await viewModel.updateCurrentUserInfo()
+            }
     }
 }
 

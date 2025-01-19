@@ -347,3 +347,80 @@
     
     </div>
     </details>
+
+## 8. Struct / Class / Actor
+- 8장에서는 다음 강의전 Struct, Class, Actor의 차이점에 대해서 다루고 있다.
+- 기본적인 내용을 다루고 있지만 애플이 SwiftUI를 만들게 된 계기에 대해서도 어느정도 이해할 수 있어서 꽤나 도움이 되는 강의라고 생각한다.
+
+    <details>
+    <summary>내용 정리</summary>
+    <div markdown="1">
+    
+    ### Links:
+    - https://blog.onewayfirst.com/ios/posts/2019-03-19-class-vs-struct/
+    - https://stackoverflow.com/questions/24217586/structure-vs-class-in-swift-language
+    - https://medium.com/@vinayakkini/swift-basics-struct-vs-class-31b44ade28ae
+    - https://stackoverflow.com/questions/24217586/structure-vs-class-in-swift-language/59219141#59219141
+    - https://stackoverflow.com/questions/27441456/swift-stack-and-heap-understanding
+    - https://stackoverflow.com/questions/24232799/why-choose-struct-over-class/24232845
+    - https://www.backblaze.com/blog/whats-the-diff-programs-processes-and-threads/
+    
+    ### VALUE TYPES:
+     - Struct, Enum, String, Int, etc.
+     - Stored in the Stack
+     - Faster
+     - Thread safe!
+     - When you assign or pass value type a new copy of data is created
+     
+    ### REFERENCE TYPES:
+     - Class, Function, Actor
+     - Stored in the Heap
+     - Slower, but synchronized
+     - Not Thread safe (default)
+     - When you assign or pass reference type a new reference to original instance will be created (pointer)
+     
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+     
+    ### STACK:
+     - Stored Value types
+     - Variables allocated on the stack are stored directly to the memory, and access to this memory is very fast
+     - Each thread has it's own stack!
+     
+    ### HEAP:
+     - Stores Reference types
+     - Shared across threads!
+     
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+     
+    ### STRUCT:
+     - Based on VALUES
+     - Can me mutated
+     - Stored in the Stack!
+     
+    ### CLASS:
+     - Based on REFERENCES (INSTANCES)
+     - Stored in the Heap!
+     - Inherit from other classes
+     
+     ### ACTOR:
+     - Same as Class, but thread safe!
+     
+     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+     
+     - Structs: Data Models, Views
+     - Classes: ViewModels
+     - Actors: Shared 'Manager' and 'Data Store'
+ 
+    ## 요약
+    - Multi Thread 환경에서 각 Thread 마다 별도의 Stack을 가지고 있다.
+    - 그래서 Stack과 Thread와의 Data 전달이 빠른 편이다.
+    - Heap은 여러 Thread와 Sync를 맞추고 있기 때문에 Stack과 Thread의 Data 전달보다는 느린편이다.
+    - Struct는 기본적으로 값 복사이고 Stack에 생성된다. 그래서 Multi Thread 환경에서 기본적으로 Data 전달이 빠르다.
+    - 이러한 특성 때문에 기존의 class ViewController 보다 재렌더링할 때 유리하기 때문에 SwiftUI를 도입한게 아닌가 추축한다. (해당 부분에 대해서는 조금 더 깊게 공부해볼 것)
+    - Class는 기본적으로 참조 복사이고 Heap에 생성된다. 그래서 Multi Thread 환경에서 기본적으로 Data 전달이 Struct에 비해 느리다.
+    - 또한 여러 Thread에서 Sync를 맞추고 있기 때문에 여러 Thread에서 동시에 Heap에 접근해서 Data를 바꾸려고 하게 되면 락이 걸릴수도 있다. -> Thread safe하지 않다.
+    - 이 때 Thread safe하도록 만든것이 바로 Actor이다.
+    - Actor는 class와 동일하지만 하나의 Thread에서 변경을 시도한다면 해당 작업이 끝나기 전에 다른 Thread에서는 접근을 하지 못하도록 막는다. 그렇기 때문에 Thread safe하게 된다.
+    
+    </div>
+    </details>

@@ -152,3 +152,98 @@
     
     </div>
     </details>
+
+## 6. TaskGroup
+- 6강에서는 TaskGroup을 활용해 반복적인 async 작업들을 병렬적으로 처리할 수 있는 방법에 대해서 설명하고 있다.
+- withThrowingTaskGroup이라는 메서드를 실행한 후 각 작업들을 TaskGroup에 추가해주는 방식으로 async throws 반복 작업을 병렬적으로 실행해줄 수 있다.
+    <details>
+    <summary>코드 정리</summary>
+    <div markdown="1">
+
+    ```swift
+    class TaskGroupBootcampDataManager {
+        func fetchImagesWithTaskGroup() async throws -> [UIImage] {
+            let urlStrings = [
+                "https://picsum.photos/300",
+                "https://picsum.photos/300",
+                "https://picsum.photos/300",
+                "https://picsum.photos/300",
+                "https://picsum.photos/300"
+            ]
+        
+            return try await withThrowingTaskGroup(of: UIImage?.self) { group in
+                var images: [UIImage] = []
+                images.reserveCapacity(urlStrings.count)
+                
+                for urlString in urlStrings {
+                    group.addTask {
+                        try? await self.fetchImage(urlString: urlString)
+                    }
+                }
+                
+                for try await image in group {
+                    if let image = image {
+                        images.append(image)
+                    }
+                }
+                
+                return images
+            }
+        }
+
+        private func fetchImage(urlString: String) async throws -> UIImage {
+            guard let url = URL(string: urlString) else {
+                throw URLError(.badURL)
+            }
+            
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                if let image = UIImage(data: data) {
+                    return image
+                } else {
+                    throw URLError(.badURL)
+                }
+            } catch {
+                throw error
+            }
+        }
+    }
+
+    class TaskGroupBootcampViewModel: ObservableObject {
+        @Published var images: [UIImage] = []
+        let manager = TaskGroupBootcampDataManager()
+        
+        func getImages() async {
+            if let images = try? await manager.fetchImagesWithTaskGroup() {
+                self.images.append(contentsOf: images)
+            }
+        }
+    }
+
+    struct TaskGroupBootcamp: View {
+        @StateObject private var viewModel = TaskGroupBootcampViewModel()
+        let columns = [GridItem(.flexible()), GridItem(.flexible())]
+        
+        var body: some View {
+            NavigationView {
+                ScrollView {
+                    LazyVGrid(columns: columns) {
+                        ForEach(viewModel.images, id: \.self) { image in
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 150)
+                        }
+                    }
+                }
+                .navigationTitle("Task Group 🥳")
+                .task {
+                    await viewModel.getImages()
+                }
+            }
+        }
+    }
+    ```
+
+    </div>
+    </details>

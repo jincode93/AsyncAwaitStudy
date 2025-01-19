@@ -414,7 +414,7 @@
     ## 요약
     - Multi Thread 환경에서 각 Thread 마다 별도의 Stack을 가지고 있다.
     - 그래서 Stack과 Thread와의 Data 전달이 빠른 편이다.
-    - Heap은 여러 Thread와 Sync를 맞추고 있기 때문에 Stack과 Thread의 Data 전달보다는 느린편이다.
+    - Heap은 여러 Thread와 Sync를 맞추고 있기 때문에 Stack에 비해 Data 전달이 느린편이다.
     - Struct는 기본적으로 값 복사이고 Stack에 생성된다. 그래서 Multi Thread 환경에서 기본적으로 Data 전달이 빠르다.
     - 이러한 특성 때문에 기존의 class ViewController 보다 재렌더링할 때 유리하기 때문에 SwiftUI를 도입한게 아닌가 추축한다. (해당 부분에 대해서는 조금 더 깊게 공부해볼 것)
     - Class는 기본적으로 참조 복사이고 Heap에 생성된다. 그래서 Multi Thread 환경에서 기본적으로 Data 전달이 Struct에 비해 느리다.

@@ -429,7 +429,7 @@
 - Actor는 class와 거의 동일하지만 Thread가 공통된 Data를 수정하려고 할 때 하나의 Thread에서 Actor에 접근하게 되면 await를 통해 해당 작업이 끝날 때까지 기다리도록 해서 Thread로부터 안전하도록 만든다.
 - Actor를 사용하지 않고 class를 Thread safe하게 하려면 class 내부에 하나의 Queue를 만들고 해당 큐에서만 작업이 이루어지도록 하면 가능하다.
     <details>
-    <summary>내용 정리</summary>
+    <summary>코드 정리</summary>
     <div markdown="1">
         
     ```swift
@@ -505,7 +505,7 @@
 - 여러 class에서 Thread safe하도록 하나의 GlobalActor로 제한해서 실행하는 것인데 실질적으로 GlobalActor를 만들어서 사용하는 경우는 거의 없을 것 같고, 그나마 사용한다면 @MainActor를 많이 사용하지 않을까 싶다.
 - @MainActor 또한 MainThread에서 safe하게 동작하도록 하는 하나의 GlobalActor라고 보면 된다.
     <details>
-    <summary>내용 정리</summary>
+    <summary>코드 정리</summary>
     <div markdown="1">
 
     ```swift
@@ -564,7 +564,7 @@
 - 11강은 Sendable Protocol에 대해서 다루고 있다.
 - Sendable은 비동기환경에서 데이터경쟁을 만들지 않고 데이터를 전달할 수 있도록 하는 protocol이다.
     <details>
-    <summary>내용 정리</summary>
+    <summary>코드 정리</summary>
     <div markdown="1">
 
     ```swift
@@ -621,5 +621,75 @@
     }
     ```
     
+    </div>
+    </details>
+
+## 12. AsyncPublisher
+- 12강에서는 AsyncPublisher에 대해 다루고 있는데, 기존 Combine 처럼 Async를 체이닝 할 수 있는 방법에 대해 다루고 있다.
+- 기본적으로 Published의 values를 통해 AsyncPublisher를 생성할 수 있고 For await를 사용해 각각의 비동기 Task를 순차적으로 실행할 수 있게 된다.
+    <details>
+    <summary>코드 정리</summary>
+    <div markdown="1">
+        
+    ```swift
+    class AsyncPublisherDataManager {
+        @Published var myData: [String] = []
+        
+        func addData() async {
+            myData.append("Apple")
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            myData.append("Banana")
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            myData.append("Orange")
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            myData.append("Watermelon")
+        }
+    }
+    
+    class AsyncPublisherBootcampViewModel: ObservableObject {
+        @MainActor @Published var dataArray: [String] = []
+        let manager = AsyncPublisherDataManager()
+        var cancellables = Set<AnyCancellable>()
+        
+        init() {
+            addSubscribers()
+        }
+        
+        private func addSubscribers() {
+            Task {
+                // 아래와 같이 수행할 때에는 주의해야될 점이 있는데 Publisher의 끝이 언제인지 모르기 때문에 영원히 await해야되는 경우가 발생할 수도 있다.
+                // AsyncSequence, AsyncStream
+                for await value in manager.$myData.values {
+                    await MainActor.run {
+                        self.dataArray = value
+                    }
+                }
+            }
+        }
+        
+        func start() async {
+            await manager.addData()
+        }
+    }
+    
+    struct AsyncPublisherBootcamp: View {
+        @StateObject private var viewModel = AsyncPublisherBootcampViewModel()
+        
+        var body: some View {
+            ScrollView {
+                VStack {
+                    ForEach(viewModel.dataArray, id: \.self) {
+                        Text($0)
+                            .font(.headline)
+                    }
+                }
+            }
+            .task {
+                await viewModel.start()
+            }
+        }
+    }
+    ```
+      
     </div>
     </details>

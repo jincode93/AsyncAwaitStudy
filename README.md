@@ -498,3 +498,64 @@
     
     </div>
     </details>
+
+## 10. GlobalActor
+- 10강은 GlobalActor Protocol에 대해서 다루고 있다.
+- GlobalActor는 Protocol인데 @globalActor 키워드로 사용할 수 있으며, 필수적으로 static var shared를 선언해야하기 때문에 싱글톤 패턴과 동일하다고 보면 된다.
+- 여러 class에서 Thread safe하도록 하나의 GlobalActor로 제한해서 실행하는 것인데 실질적으로 GlobalActor를 만들어서 사용하는 경우는 거의 없을 것 같고, 그나마 사용한다면 @MainActor를 많이 사용하지 않을까 싶다.
+- @MainActor 또한 MainThread에서 safe하게 동작하도록 하는 하나의 GlobalActor라고 보면 된다.
+    <details>
+    <summary>내용 정리</summary>
+    <div markdown="1">
+
+    ```swift
+    @globalActor final class MyFirstGlobalActor {
+        // globalActor protocol을 사용하기 위해서는 필수적으로 싱글톤 패턴을 사용할 수 밖에 없다.
+        static var shared = MyNewDataManager()
+    }
+
+    actor MyNewDataManager {
+        func getDataFromDatabase() -> [String] {
+            return ["One", "Two", "Three", "Four", "FIVE", "SIX"]
+        }
+    }
+    
+    class GlobalActorBootcampViewModel: ObservableObject {
+        @MainActor @Published var dataArray: [String] = []
+        let manager = MyFirstGlobalActor.shared
+        
+        @MyFirstGlobalActor
+        func getData() {
+            Task {
+                let data = await manager.getDataFromDatabase()
+                // UI를 업데이트하는 내용인데 MainActor.run 키워드를 사용하지 않더라도 현재 컴파일 에러가 발생하지 않는다.
+                // @Published var dataArray 앞에 @MainActor를 사용하게 되면 아래 코드에서 컴파일 에러가 발생하게 된다.
+                // 혹은 class 자체에 @MainActor를 사용하게 되면 아래 코드에서 컴파일 에러가 발생하게 된다.
+                await MainActor.run {
+                    self.dataArray = data
+                }
+            }
+        }
+    }
+    
+    struct GlobalActorBootcamp: View {
+        @StateObject private var viewModel = GlobalActorBootcampViewModel()
+        
+        var body: some View {
+            ScrollView {
+                VStack {
+                    ForEach(viewModel.dataArray, id: \.self) {
+                        Text($0)
+                            .font(.headline)
+                    }
+                }
+            }
+            .task {
+                await viewModel.getData()
+            }
+        }
+    }
+    ```
+    
+    </div>
+    </details>

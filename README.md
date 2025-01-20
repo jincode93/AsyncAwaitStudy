@@ -423,3 +423,78 @@
     
     </div>
     </details>
+
+## 9. Actor
+- 9장에서는 Actor를 활용해 Thread safe하게 사용하는 방법에 대해 다루고 있다.
+- Actor는 class와 거의 동일하지만 Thread가 공통된 Data를 수정하려고 할 때 하나의 Thread에서 Actor에 접근하게 되면 await를 통해 해당 작업이 끝날 때까지 기다리도록 해서 Thread로부터 안전하도록 만든다.
+- Actor를 사용하지 않고 class를 Thread safe하게 하려면 class 내부에 하나의 Queue를 만들고 해당 큐에서만 작업이 이루어지도록 하면 가능하다.
+    <details>
+    <summary>내용 정리</summary>
+    <div markdown="1">
+        
+    ```swift
+    // Queue를 생성해서 class를 Thread safe하게 만드는 방법
+    class MyDataManager {
+        static let instance = MyDataManager()
+        private init() { }
+        
+        var data: [String] = []
+        private let lock = DispatchQueue(label: "com.MyApp.MyDataManager")
+        func getRandomData(completionHandler: @escaping (_ title: String?) -> ()) {
+            lock.async {
+                self.data.append(UUID().uuidString)
+                print(Thread.current)
+                completionHandler(self.data.randomElement())
+            }
+        }
+    }
+
+    // Actor 사용 방법
+    actor MyActorDataManager {
+        static let instance = MyActorDataManager()
+        private init() { }
+        
+        var data: [String] = []
+        nonisolated let myRandomText: String = "MyRandomText"
+        
+        func getRandomData() -> String? {
+            self.data.append(UUID().uuidString)
+            print(Thread.current)
+            return data.randomElement()
+        }
+        
+        // actor 안에서 async가 굳이 필요 없다면 nonisolated 키워드를 붙이면 해당 메서드를 실행할 때 await를 붙일 필요가 없다.
+        nonisolated func getSavedData() -> String {
+            return "NEW DATA"
+        }
+    }
+
+    struct HomeView: View {
+        @State private var text: String = ""
+        let manager = MyActorDataManager.instance
+        let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+        
+        var body: some View {
+            ZStack {
+                Color.gray.opacity(0.8).ignoresSafeArea()
+                
+                Text(text)
+                    .font(.headline)
+            }
+            .onAppear {
+                let newString = manager.getSavedData()
+                let message = manager.myRandomText
+            }
+            .onReceive(timer) { _ in
+                Task {
+                    if let data = await manager.getRandomData() {
+                        self.text = data
+                    }
+                }
+            }
+        }
+    }
+    ```
+    
+    </div>
+    </details>

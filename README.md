@@ -693,3 +693,28 @@
       
     </div>
     </details>
+
+## 13. Strong & Weak References with Async Await
+- 13강에서는 Task에서 강한 참조, 약한 참조 관리 방법에 대해 다루고 있다.
+- capture를 통해 참조 관리를 해줘도 되지만 Task를 class 내부에 Attribute로 가지고 있는 방법을 통해 class가 deinit되었을 때 Task가 종료되는 방법을 사용할 수 있다.
+- 그런데 내가 이해한 바로는 Task를 사용하면 굳이 capture나 Task를 별도의 Attribute로 가지고 있지 않더라도 참조 관리가 된다고 이해했다...(심지어 뒤에 강의들도 보면 두개의 방법 모두 사용하고 있지 않다.)
+
+## 14. MVVM
+- MVVM 형태에서 Async 및 Actor를 활용하는 방법에 대해 설명하고 있다.
+- 일반적으로 ViewModel의 경우 View에서 동작하는 로직을 담고있는 경우가 거의 대부분이므로 이 때 ViewModel은 @MainActor 키워드를 사용해 무조건 메인 스레드에서 실행하도록 관리하고, 만약 다른 Thread에서 실행되어야 하는 경우 별도의 class 혹은 Actor를 활용해서 다른 로직을 실행한 후 Published에 할당하는 작업만 ViewModel에서 메서드로 관리해서 동작하는 방법을 설명하고 있다.
+
+## 15. Refreshable
+- refreshable Modifier를 활용해 새로고침 로직을 구현하는 방법에 대해 다루고 있다.
+- View에 .refreshable을 달아서 사용을 하고 이 때 내부에서 async 메서드를 호출하게 된다면 별도의 Task 처리 없이 사용할 수 있고, 해당 메서드가 끝날 때 까지 기다렸다가 ProgressView가 사라지도록 할 수 있다.
+- Async 메서드와 큰 연관이 있다기 보다는 그냥 Refreshable을 사용해본다는 개념으로 한번정도 따라해보면 나쁘지 않을 것 같다.
+
+## 16. Searchable
+- searchable Modifier를 활용해 검색 로직을 구현하는 방법에 대해 다루고 있다.
+- .searchable, .searchScopes, .searchSuggestions 3가지에 대해서 설명해주는데 이번 강의 또한 Async와는 큰 연관이 없기 때문에 Searchable을 사용해본다는 개념으로 따라해보면 나쁘지 않다.
+- 한가지 아쉬운 점은 검색 로직은 완전 실시간으로 반영하게 되면 유저가 검색어를 입력하는 동안도 너무 많은 API 호출이 일어나기 때문에 보통 debounce를 활용해 약간의 딜레이를 걸게 되는데 아직 Async Await에서는 debounce를 사용하지 못하기 때문에 어쩔 수 없이 Combine과 함께 써야한다.
+- Async로 debounce를 사용할 수 있도록 애플에서 [Async Algorithms](https://github.com/apple/swift-async-algorithms) 라이브러리를 만들어놨는데 아직 정식으로 포함이 안된것을 보면 뭔가 문제가 있는 것으로 생각된다.
+
+## 17. PhotoPicker
+- PhotosUI 프레임워크의 PhotosPicker를 활용하는 방법에 대해 다루고 있는데 위 2개와 마찬가지로 그냥 한번 따라해보면 좋을 것 같다.
+
+## 18. 
